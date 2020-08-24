@@ -1,0 +1,27 @@
+- hosts: "{{ inventory_managed_host }}"
+  connection: ssh
+  gather_facts: no
+  tasks:     
+    - name: Start jupyter lab
+      shell: nohup jupyter lab&
+      args:
+        executable: /bin/bash
+      register: jupyter
+     
+    - name: Sleep
+      shell: sleep 5
+
+    - name: Get token
+      shell: jupyter notebook list | tail -n 1 | awk '{print $1}' | cut -d':' -f3
+      register: token
+      
+    - name: Send a Email with notification
+      mail:
+       host: smtp.gmail.com
+       port: 587
+       username: abcd@example.com
+       password: password
+       to: abcdef <abcdef@example.com>
+       subject: Jupyter Lab access link
+       body: 'Access the JupyterLab Python notebooks via http://{{ inventory_managed_host }}:{{ token.stdout }}'
+       timeout: 60
